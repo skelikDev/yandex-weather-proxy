@@ -3,8 +3,8 @@ import fetch from 'node-fetch';
 import cors from 'cors';
 
 const almaty = {
-    lat:43.25667,
-    lon:76.92861
+    lat: 43.25667,
+    lon: 76.92861
 }
 
 const transformWeatherData = (data) => {
@@ -25,8 +25,21 @@ const transformWeatherData = (data) => {
     return transformedData
 }
 
+const getDateString = (dateInput) => {
+    const almatyTime = new Date(dateInput);
+    const date = {
+        hours: almatyTime.getHours().toString().padStart(2, '0'),
+        minutes: almatyTime.getMinutes().toString().padStart(2, '0'),
+        day: almatyTime.getDate().toString().padStart(2, '0'),
+        month: (almatyTime.getMonth() + 1).toString().padStart(2, '0'),
+        year: almatyTime.getFullYear(),
+
+    }
+    return `По данным на ${date.hours}:${date.minutes} ${date.day}.${date.month}.${date.year}`
+}
+
 const app = express();
-const port = process.env.PORT||3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -57,7 +70,10 @@ app.get('/transformed', async (req, res) => {
             }
         });
         const data = await yandexResponse.json();
-        res.send(transformWeatherData(data));
+        res.send({
+            forecast: transformWeatherData(data),
+            now: getDateString(data.now_dt)
+        });
     } catch (error) {
         console.log(error)
         res.status(500).send(error);
