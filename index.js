@@ -7,15 +7,14 @@ const almaty = {
     lon:76.92861
 }
 
-
 const app = express();
-const port = 3000;
+const port = 80;
 
 app.use(cors());
 app.use(express.json());
 
 
-app.get('/weather', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
         const yandexResponse = await fetch(`https://api.weather.yandex.ru/v2/informers?lat=${almaty.lat}&lon=${almaty.lon}`, {
             method: 'GET',
@@ -32,5 +31,5 @@ app.get('/weather', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Прокси-сервер запущен на http://localhost:${port}`);
+    console.log(`Прокси-сервер запущен на порту --- ${port}`);
 });
