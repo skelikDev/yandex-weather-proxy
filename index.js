@@ -7,6 +7,24 @@ const almaty = {
     lon:76.92861
 }
 
+const transformWeatherData = (data) => {
+    const transformedData = [{
+        icon: data.fact.icon,
+        temp: data.fact.temp,
+        part_name: 'now'
+    }]
+
+    data?.forecast?.parts?.forEach(({temp_avg, icon, part_name}) => {
+        transformedData.push({
+            icon: icon,
+            temp: temp_avg,
+            part_name: part_name,
+        })
+    })
+
+    return transformedData
+}
+
 const app = express();
 const port = process.env.PORT||3000;
 
@@ -23,7 +41,7 @@ app.get('/', async (req, res) => {
             }
         });
         const data = await yandexResponse.json();
-        res.send(data);
+        res.send(transformWeatherData(data));
     } catch (error) {
         console.log(error)
         res.status(500).send(error);
