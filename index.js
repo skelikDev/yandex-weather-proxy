@@ -41,6 +41,22 @@ app.get('/', async (req, res) => {
             }
         });
         const data = await yandexResponse.json();
+        res.send(data);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error);
+    }
+});
+
+app.get('/transformed', async (req, res) => {
+    try {
+        const yandexResponse = await fetch(`https://api.weather.yandex.ru/v2/informers?lat=${almaty.lat}&lon=${almaty.lon}`, {
+            method: 'GET',
+            headers: {
+                'X-Yandex-API-Key': '41f3eb2c-a229-4ae2-b1e2-ed2aaf4b2481'
+            }
+        });
+        const data = await yandexResponse.json();
         res.send(transformWeatherData(data));
     } catch (error) {
         console.log(error)
