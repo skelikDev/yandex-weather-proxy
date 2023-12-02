@@ -145,6 +145,7 @@ app.get('/html', async (req, res) => {
                                          part_name
                                      }, index) => createCard(ELEMENT_IDS[index], icon, temp, part_name, index)).join('')
 
+    $('#date').append(json?.now)
 
     const html = `
         <!DOCTYPE html> 
@@ -162,7 +163,9 @@ app.get('/html', async (req, res) => {
                  </div>
                  <div class="footer">
                      <img class="logo" src="image/logo.svg"/>
-                     <span id="date" class="date"></span>
+                     <span id="date" class="date">
+                     ${data.now}
+                     </span>
                  </div>
             </div>
         </body>
