@@ -7,7 +7,33 @@ const almaty = {
     lon: 76.92861
 }
 
-const transformWeatherData = (data) => {
+export class Weather {
+    data = null;
+
+    fetchNewData = async () => {
+        try {
+            const yandexResponse = await fetch(`https://api.weather.yandex.ru/v2/informers?lat=${almaty.lat}&lon=${almaty.lon}`, {
+                method: 'GET',
+                headers: {
+                    'X-Yandex-API-Key': '41f3eb2c-a229-4ae2-b1e2-ed2aaf4b2481'
+                }
+            });
+            const fetchedData = await yandexResponse.json();
+            return {
+                forecast: transformWeatherData(fetchedData),
+                now: getDateString(fetchedData.now_dt)
+            }
+        } catch (error) {
+            console.log(error)
+            this.data = null;
+        }
+    }
+}
+
+export const weatherService = new Weather()
+
+
+export const transformWeatherData = (data) => {
     const transformedData = [{
         icon: data.fact.icon,
         temp: data.fact.temp,
@@ -25,7 +51,7 @@ const transformWeatherData = (data) => {
     return transformedData
 }
 
-const getDateString = (dateInput) => {
+export const getDateString = (dateInput) => {
     const almatyTime = new Date(dateInput);
     const date = {
         hours: almatyTime.getHours().toString().padStart(2, '0'),
@@ -41,9 +67,9 @@ const getDateString = (dateInput) => {
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(express.static('public'));
 app.use(cors());
 app.use(express.json());
-
 
 app.get('/', async (req, res) => {
     try {
@@ -60,6 +86,7 @@ app.get('/', async (req, res) => {
         res.status(500).send(error);
     }
 });
+
 
 app.get('/transformed', async (req, res) => {
     try {
@@ -79,6 +106,72 @@ app.get('/transformed', async (req, res) => {
         res.status(500).send(error);
     }
 });
+
+const PART_NAME = {
+    now: 'Сейчас',
+    night: 'Ночь',
+    morning: 'Утро',
+    day: 'День',
+    evening: 'Вечер',
+}
+
+const ELEMENT_IDS = [
+    "now",
+    "next",
+    "nextAfter",
+]
+
+app.get('/html', async (req, res) => {
+    const data = await weatherService.fetchNewData()
+
+    const createCard = (elementId, icon, temp, part_name, index) => {
+        return `
+         <div id="${elementId}" class="card">
+            <span class="title">
+               ${PART_NAME[part_name]}
+            </span>
+            <div class="icon">
+                <img src="image/weather/${icon}.svg" alt="${icon}"/>
+            </div>
+            <span class="temperature">
+                ${temp}°
+            </span>
+        </div>
+`
+    }
+    const cards = data.forecast.map(({
+                                         icon,
+                                         temp,
+                                         part_name
+                                     }, index) => createCard(ELEMENT_IDS[index], icon, temp, part_name, index)).join('')
+
+
+    const html = `
+        <!DOCTYPE html> 
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Yandex Weather</title>
+            <link rel="stylesheet" type="text/css" href="css/style.css">
+        </head>
+        <body>
+            <div class="content">
+                 <div class="cards">
+                    ${cards}
+       
+                 </div>
+                 <div class="footer">
+                     <img class="logo" src="image/logo.svg"/>
+                     <span id="date" class="date"></span>
+                 </div>
+            </div>
+        </body>
+        </html>
+`
+    res.send(html);
+
+});
+
 
 app.listen(port, () => {
     console.log(`Прокси-сервер запущен на порту --- ${port}`);
